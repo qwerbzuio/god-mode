@@ -304,6 +304,17 @@ Members of the `god-exempt-major-modes' list are exempt."
            (throw 'disable t))
          (setq preds (cdr preds)))))))
 
+;; support for delete-selection-mode
+(defun god-mode-delete-selection-helper ()
+  (ignore-errors
+    (let* ((initial-key (aref (this-command-keys-vector)
+                             (- (length (this-command-keys-vector)) 1)))
+          (binding (god-mode-lookup-key-sequence initial-key)))
+     (when-let ((delsel-type
+                 (and (commandp binding t) (get binding 'delete-selection))))
+       delsel-type))))
+(put 'god-mode-self-insert 'delete-selection 'god-mode-delete-selection-helper)
+
 (provide 'god-mode)
 
 ;;; god-mode.el ends here
