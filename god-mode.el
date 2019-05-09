@@ -306,13 +306,22 @@ Members of the `god-exempt-major-modes' list are exempt."
 
 ;; support for delete-selection-mode
 (defun god-mode-delete-selection-helper ()
-  (ignore-errors
+  (ignore-errors ;; errors would kill delsel-mode
+    ;; copy&paste from god-mode-self-insert
     (let* ((initial-key (aref (this-command-keys-vector)
-                             (- (length (this-command-keys-vector)) 1)))
-          (binding (god-mode-lookup-key-sequence initial-key)))
-     (when-let ((delsel-type
-                 (and (commandp binding t) (get binding 'delete-selection))))
-       delsel-type))))
+                              (- (length (this-command-keys-vector)) 1)))
+           (binding (god-mode-lookup-key-sequence initial-key)))
+      (when (god-mode-upper-p initial-key)
+        (setq this-command-keys-shift-translated t))
+      (setq this-original-command binding)
+      (setq this-command binding)
+      ;; `real-this-command' is used by emacs to populate
+      ;; `last-repeatable-command', which is used by `repeat'.
+      (setq real-this-command binding)
+      (setq god-literal-sequence nil)
+      (when-let ((delsel-type
+                  (and (commandp binding t) (get binding 'delete-selection))))
+        delsel-type))))
 (put 'god-mode-self-insert 'delete-selection 'god-mode-delete-selection-helper)
 
 (provide 'god-mode)
